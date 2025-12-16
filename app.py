@@ -32,6 +32,7 @@ UDP_IP = "127.0.0.1"  # Localhost for UDP stream
 UDP_PORT = 25000      # Port used by Simulink exporter / sender
 FEATURE_COUNT = 85    # Index + 84 features
 SAMPLE_COUNT = 20     # Samples per batch
+step_ms=1
 SHAPE = (SAMPLE_COUNT, FEATURE_COUNT)  # Shared-memory array shape
 
 FAULT_FOLDER = os.path.join(os.getcwd(), 'faults')
@@ -114,7 +115,7 @@ def logger_process(shmA_name, shmB_name, ready_A, ready_B):
 def detect_event(buf, sag_thr=0.9, swell_thr=1.1):
     """Simple threshold-based sag/swell detector on Phase A."""
     x = buf[:, 0]
-    y = buf[:, 60]  # Monitoring Phase A (example index)
+    y = buf[:, 45]  # Monitoring Phase A (example index) bus 8 phase C
 
     if np.any(y < sag_thr):
         return x.tolist(), y.tolist(), "sag"
@@ -313,6 +314,118 @@ def chat():
         'response': markdown.markdown(plain_response),
         'history': updated_history
     })
+# ================= COST MODEL (STATIC EXAMPLE ASSETS) =================
+
+
+def compute_damage_probability(event_type, duration_ms, sensitivity):
+    # Simple linear model (you can refine)
+    sev = 0.6 if event_type == "sag" else 0.8
+    dur_factor = min(duration_ms / 2000, 1.0)
+    return round(sev * dur_factor * sensitivity, 3)
+
+ASSET_DB = {
+    "BUS 1": [
+        {
+            "name": "Induction Motor M1",
+            "type": "motor",
+            "rating_kw": 55,
+            "asset_cost_rs": 450000,              # Replacement cost
+            "process_cost_rs_per_min": 12000,     # Production loss per minute
+            "sensitivity": 0.6
+        },
+        {
+            "name": "Control Panel CP1",
+            "type": "control_panel",
+            "rating_kw": None,
+            "asset_cost_rs": 150000,
+            "process_cost_rs_per_min": 3000,
+            "sensitivity": 0.35
+        }
+    ],
+
+    "BUS 11": [
+        {
+            "name": "VFD Line-3",
+            "type": "vfd",
+            "rating_kw": 90,
+            "asset_cost_rs": 850000,
+            "process_cost_rs_per_min": 25000/60000,
+            "sensitivity": 0.9
+        },
+        {
+            "name": "Induction Motor M11",
+            "type": "motor",
+            "rating_kw": 75,
+            "asset_cost_rs": 520000,
+            "process_cost_rs_per_min": 15000/60000,
+            "sensitivity": 0.7
+        }
+    ],
+
+    "BUS 5": [
+        {
+            "name": "Packaging Robot R5",
+            "type": "robot",
+            "rating_kw": 30,
+            "asset_cost_rs": 1200000,
+            "process_cost_rs_per_min": 35000/(60000),       #its in per ms
+            "sensitivity": 0.85
+        }
+    ],
+
+    "BUS 7": [
+        {
+            "name": "CNC Machine CNC-7",
+            "type": "cnc",
+            "rating_kw": 45,
+            "asset_cost_rs": 950000,
+            "process_cost_rs_per_min": 28000/(60000),
+            "sensitivity": 0.75
+        }
+    ]
+}
+
+# ================= DAMAGE COST ENDPOINT =================
+@app.route('/extra_cost_data')
+def extra_cost_data():
+    """Reads last fault and returns asset-wise damage cost."""
+    if not os.path.exists(FAULT_FOLDER):
+        return jsonify({"assets": []})
+
+    fault_files = [f for f in os.listdir(FAULT_FOLDER) if f.endswith(".txt")]
+    if not fault_files:
+        return jsonify({"assets": []})
+
+    latest = sorted(fault_files)[-1]  # last detected fault
+
+    with open(os.path.join(FAULT_FOLDER, latest), "r") as f:
+        fault = json.load(f)
+
+    bus = fault.get("location", "BUS 11")
+    event_type = fault.get("type", "Voltage sag").replace("Voltage ", "")
+    raw_duration = fault.get("duration_ms", 100)
+
+    if raw_duration == "ongoing":
+        duration = SAMPLE_COUNT*step_ms   # assume 2 sec exposure so far
+    else:
+        duration = int(float(raw_duration))
+
+    assets = ASSET_DB.get(bus, [])
+    output = []
+    for a in assets:
+        prob = compute_damage_probability(event_type, duration, a["sensitivity"])
+        dmg_cost = prob * a["asset_cost_rs"]   # FIXED
+
+        output.append({
+            "name": a["name"],
+            "sensitivity": a["sensitivity"],
+            "replacement_cost": a["asset_cost_rs"],   # FIXED for UI column
+            "damage_probability": prob,
+            "damage_cost": round(dmg_cost, 2),
+        })
+
+    return jsonify({"assets": output})
+
 
 # ================= MAIN =================
 if __name__ == "__main__":
