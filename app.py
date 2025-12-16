@@ -111,18 +111,26 @@ def logger_process(shmA_name, shmB_name, ready_A, ready_B):
     except Exception as e:
         print(f"[Logger] Crashed: {e}")
 
+
+def sliding_rms(x, window=5):
+    return np.sqrt(np.convolve(x**2, np.ones(window)/window, mode='valid'))
+
 # ================= EVENT DETECTION =================
 def detect_event(buf, sag_thr=0.9, swell_thr=1.1):
     """Simple threshold-based sag/swell detector on Phase A."""
     x = buf[:, 0]
-    y = buf[:, 45]  # Monitoring Phase A (example index) bus 8 phase C
+    y = buf[:, 45]  # Monitoring bus 8 phase C
 
-    if np.any(y < sag_thr):
+    # RMS over the batch (window)
+    vrms_series = sliding_rms(y)
+    vrms = np.mean(vrms_series)
+
+    if vrms < sag_thr:
         return x.tolist(), y.tolist(), "sag"
-    if np.any(y > swell_thr):
+    elif vrms > swell_thr:
         return x.tolist(), y.tolist(), "swell"
-
-    return x.tolist(), y.tolist(), "normal"
+    else:
+        return x.tolist(), y.tolist(), "normal"
 
 def _write_event_file(filename, start_time, event_type, bus, status, duration=None):
     """Write event status to a JSON text file to be consumed by the frontend."""
