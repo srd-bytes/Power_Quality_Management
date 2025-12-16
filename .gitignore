@@ -1,0 +1,10 @@
+.env
+.venv/
+# MATLAB Model generated files
+Matlab_Model/slprj/
+Matlab_Model/*.slxc
+*.asv
+*.asc
+*.ascx
+*.ascx
+*/__pycache__

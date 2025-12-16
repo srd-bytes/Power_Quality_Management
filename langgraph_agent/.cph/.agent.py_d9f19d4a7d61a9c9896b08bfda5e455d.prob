@@ -1,0 +1,1 @@
+{"name":"Local: agent","url":"/home/vc940/Work/Flaskapp/langgraph_agent/agent.py","tests":[{"id":1754500561884,"input":"","output":""}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"/home/vc940/Work/Flaskapp/langgraph_agent/agent.py","group":"local","local":true}

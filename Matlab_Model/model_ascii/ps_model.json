@@ -1,0 +1,365 @@
+{
+    "model": "Simulink_14Bus_System",
+    "buses": [
+        "BUS1",
+        "BUS2",
+        "BUS3",
+        "BUS4",
+        "BUS5",
+        "BUS6",
+        "BUS7",
+        "BUS8",
+        "BUS9",
+        "BUS10",
+        "BUS11",
+        "BUS12",
+        "BUS13",
+        "BUS14"
+    ],
+    "nodes": {
+        "BUS1": [
+            "BUS1_A",
+            "BUS1_B",
+            "BUS1_C"
+        ],
+        "BUS2": [
+            "BUS2_A",
+            "BUS2_B",
+            "BUS2_C"
+        ],
+        "BUS3": [
+            "BUS3_A",
+            "BUS3_B",
+            "BUS3_C"
+        ],
+        "BUS4": [
+            "BUS4_A",
+            "BUS4_B",
+            "BUS4_C"
+        ],
+        "BUS5": [
+            "BUS5_A",
+            "BUS5_B",
+            "BUS5_C"
+        ],
+        "BUS6": [
+            "BUS6_A",
+            "BUS6_B",
+            "BUS6_C"
+        ],
+        "BUS7": [
+            "BUS7_A",
+            "BUS7_B",
+            "BUS7_C"
+        ],
+        "BUS8": [
+            "BUS8_A",
+            "BUS8_B",
+            "BUS8_C"
+        ],
+        "BUS9": [
+            "BUS9_A",
+            "BUS9_B",
+            "BUS9_C"
+        ],
+        "BUS10": [
+            "BUS10_A",
+            "BUS10_B",
+            "BUS10_C"
+        ],
+        "BUS11": [
+            "BUS11_A",
+            "BUS11_B",
+            "BUS11_C"
+        ],
+        "BUS12": [
+            "BUS12_A",
+            "BUS12_B",
+            "BUS12_C"
+        ],
+        "BUS13": [
+            "BUS13_A",
+            "BUS13_B",
+            "BUS13_C"
+        ],
+        "BUS14": [
+            "BUS14_A",
+            "BUS14_B",
+            "BUS14_C"
+        ]
+    },
+    "generators": [
+        {
+            "name": "GEN1",
+            "bus": "BUS2"
+        },
+        {
+            "name": "GEN2",
+            "bus": "BUS3"
+        }
+    ],
+    "synchronous_compensators": [
+        {
+            "name": "SYNC_COMP1",
+            "bus": "BUS3"
+        },
+        {
+            "name": "SYNC_COMP2",
+            "bus": "BUS5"
+        },
+        {
+            "name": "SYNC_COMP3",
+            "bus": "BUS6"
+        }
+    ],
+    "loads": [
+        {
+            "name": "LOAD4",
+            "bus": "BUS4"
+        },
+        {
+            "name": "LOAD5",
+            "bus": "BUS5"
+        },
+        {
+            "name": "LOAD7",
+            "bus": "BUS7"
+        },
+        {
+            "name": "LOAD9",
+            "bus": "BUS9"
+        },
+        {
+            "name": "LOAD10",
+            "bus": "BUS10"
+        },
+        {
+            "name": "LOAD12",
+            "bus": "BUS12"
+        },
+        {
+            "name": "LOAD13",
+            "bus": "BUS13"
+        },
+        {
+            "name": "LOAD14",
+            "bus": "BUS14"
+        }
+    ],
+    "transmission_lines": [
+        {
+            "name": "LINE1_2",
+            "from": "BUS1",
+            "to": "BUS2"
+        },
+        {
+            "name": "LINE2_3",
+            "from": "BUS2",
+            "to": "BUS3"
+        },
+        {
+            "name": "LINE2_4",
+            "from": "BUS2",
+            "to": "BUS4"
+        },
+        {
+            "name": "LINE3_4",
+            "from": "BUS3",
+            "to": "BUS4"
+        },
+        {
+            "name": "LINE4_5",
+            "from": "BUS4",
+            "to": "BUS5"
+        },
+        {
+            "name": "LINE5_6",
+            "from": "BUS5",
+            "to": "BUS6"
+        },
+        {
+            "name": "LINE6_7",
+            "from": "BUS6",
+            "to": "BUS7"
+        },
+        {
+            "name": "LINE7_9",
+            "from": "BUS7",
+            "to": "BUS9"
+        },
+        {
+            "name": "LINE9_10",
+            "from": "BUS9",
+            "to": "BUS10"
+        },
+        {
+            "name": "LINE10_11",
+            "from": "BUS10",
+            "to": "BUS11"
+        },
+        {
+            "name": "LINE11_12",
+            "from": "BUS11",
+            "to": "BUS12"
+        },
+        {
+            "name": "LINE12_13",
+            "from": "BUS12",
+            "to": "BUS13"
+        },
+        {
+            "name": "LINE13_14",
+            "from": "BUS13",
+            "to": "BUS14"
+        }
+    ],
+    "measurements": {
+        "voltage": [
+            {
+                "bus": "BUS1",
+                "id": "VM1"
+            },
+            {
+                "bus": "BUS2",
+                "id": "VM2"
+            },
+            {
+                "bus": "BUS3",
+                "id": "VM3"
+            },
+            {
+                "bus": "BUS4",
+                "id": "VM4"
+            },
+            {
+                "bus": "BUS5",
+                "id": "VM5"
+            },
+            {
+                "bus": "BUS6",
+                "id": "VM6"
+            },
+            {
+                "bus": "BUS7",
+                "id": "VM7"
+            },
+            {
+                "bus": "BUS8",
+                "id": "VM8"
+            },
+            {
+                "bus": "BUS9",
+                "id": "VM9"
+            },
+            {
+                "bus": "BUS10",
+                "id": "VM10"
+            },
+            {
+                "bus": "BUS11",
+                "id": "VM11"
+            },
+            {
+                "bus": "BUS12",
+                "id": "VM12"
+            },
+            {
+                "bus": "BUS13",
+                "id": "VM13"
+            },
+            {
+                "bus": "BUS14",
+                "id": "VM14"
+            }
+        ],
+        "current": [
+            {
+                "bus": "BUS1",
+                "id": "IM1"
+            },
+            {
+                "bus": "BUS2",
+                "id": "IM2"
+            },
+            {
+                "bus": "BUS3",
+                "id": "IM3"
+            },
+            {
+                "bus": "BUS4",
+                "id": "IM4"
+            },
+            {
+                "bus": "BUS5",
+                "id": "IM5"
+            },
+            {
+                "bus": "BUS6",
+                "id": "IM6"
+            },
+            {
+                "bus": "BUS7",
+                "id": "IM7"
+            },
+            {
+                "bus": "BUS8",
+                "id": "IM8"
+            },
+            {
+                "bus": "BUS9",
+                "id": "IM9"
+            },
+            {
+                "bus": "BUS10",
+                "id": "IM10"
+            },
+            {
+                "bus": "BUS11",
+                "id": "IM11"
+            },
+            {
+                "bus": "BUS12",
+                "id": "IM12"
+            },
+            {
+                "bus": "BUS13",
+                "id": "IM13"
+            },
+            {
+                "bus": "BUS14",
+                "id": "IM14"
+            }
+        ]
+    },
+    "rectifier": {
+        "ac_bus": "BUS11",
+        "dc_nodes": [
+            "DC_POS",
+            "DC_NEG"
+        ],
+        "components": [
+            {
+                "name": "DIODE_BRIDGE"
+            },
+            {
+                "name": "DC_LINK_CAP"
+            },
+            {
+                "name": "DC_LOAD"
+            },
+            {
+                "name": "RECTIFIER_MEAS"
+            }
+        ]
+    },
+    "export_chain": {
+        "mux": "MUX_84",
+        "output_vector": "VEC84",
+        "datatype_conversion": "TO_SINGLE",
+        "udp_sender": "UDP_SEND"
+    },
+    "powergui": {
+        "mode": "continuous",
+        "domain": "three_phase"
+    }
+}

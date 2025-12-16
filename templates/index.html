@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Power Quality Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #00aaff;
+            --danger-color: #ff4d4d;
+            --success-color: #00e676;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .dashboard-title {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            background: rgba(17, 25, 40, 0.65);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.125);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 1.1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.125);
+            color: #ffffff;
+        }
+
+        .card-header .fa-solid {
+            color: var(--primary-color);
+        }
+
+        #total-cost-display {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+            
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: background-color 0.2s ease;
+        }
+
+        .list-group-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .list-group-item:hover {
+            background-color: rgba(0, 170, 255, 0.1);
+        }
+
+        .btn {
+             transition: all 0.2s ease;
+        }
+
+        #chat-box {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: var(--primary-color);
+            color: #fff;
+            margin-left: auto;
+            border-bottom-right-radius: 3px;
+        }
+        .agent-message {
+            background-color: #37474F;
+            color: #fff;
+            margin-right: auto;
+            border-bottom-left-radius: 3px;
+        }
+
+        .recommendation-viewer {
+            background: rgba(0,0,0,0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body class="container-fluid py-4">
+
+
+
+    <h2 class="text-center dashboard-title"><i class="fa-solid fa-bolt-lightning"></i> Power Quality Monitoring Dashboard</h2>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card h-100">
+                <div class="card-header"><i class="fa-solid fa-wave-square" style="color: #4dd0e1;"></i> Live Voltage Monitoring</div>
+                <div class="card-body">
+                    <div id="plot" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+
+<div class="col-lg-5 mb-4">
+<div class="card h-100">
+<div class="card-header">
+    <i class="fa-solid fa-coins" style="color: #ffd700;"></i>
+    Asset Damage & Cost Analysis
+</div>
+
+<div class="card-body d-flex flex-column">
+
+    <button onclick="loadDamageCost()" class="btn btn-outline-warning mb-3">
+        Load Damage Cost
+    </button>
+
+    <h5 id="damage-total" class="mt-2">
+        Total Damage Cost:
+        <span style="color:#ff4d4d">--</span>
+    </h5>
+
+    <!-- TABLE SAME SIZE AS PREVIOUS CHART CARD -->
+    <div style="height: 300px; overflow-y: auto;">
+        <table class="table table-dark table-striped" id="damage-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Sensitivity</th>
+                    <th>Replacement Cost (₹)</th>
+                    <th>Damage Probability</th>
+                    <th>Damage Cost (₹)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-robot" style="color: var(--success-color);"></i> LangGraph AI Agent</div>
+                <div class="card-body">
+                    <div id="chat-box" class="mb-3" style="min-height: 250px; max-height: 300px; overflow-y: auto;"></div>
+                    <div class="input-group">
+                        <input type="text" id="user-input" class="form-control" placeholder="Ask about recent events...">
+                        <button id="send-button" class="btn btn-success">Send <i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-lightbulb" style="color: #ffca28;"></i> AI Recommendations</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button onclick="generateNewRecommendation()" class="btn btn-sm btn-outline-warning mb-2">Generate for New Fault</button>
+                        <button onclick="loadRecommendations()" class="btn btn-sm btn-outline-info mb-2">Load All Recommendations</button>
+                    </div>
+                    <ul id="ai-recommendation-list" class="list-group mb-2" style="max-height: 180px; overflow-y: auto;"></ul>
+                    <div id="recommendation-viewer" class="recommendation-viewer" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-file-pdf" style="color: #bcaaa4;"></i> Generated Reports (PDF)</div>
+                <div class="card-body">
+                    <button onclick="loadReports()" class="btn btn-outline-secondary mb-2">Load Reports</button>
+                    <ul id="report-list" class="list-group mb-2"></ul>
+                    <iframe id="pdf-viewer" style="width:100%; height:400px; display:none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-file-waveform" style="color: #ffab91;"></i> Previous Fault Events (TXT)</div>
+                <div class="card-body">
+                    <button onclick="loadFaults()" class="btn btn-outline-warning mb-2">Load Fault Files</button>
+                    <ul id="fault-list" class="list-group mb-2"></ul>
+                    <iframe id="fault-viewer" style="width:100%; height:300px; display:none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let lastFaultIndex = -1;
+
+    function updateWaveform() {
+        fetch('/waveform_data')
+            .then(response => response.json())
+            .then(data => {
+                const labelColors = { normal: '#26de81', sag: '#45aaf2', swell: '#f7b731', spike: '#fc5c65' };
+                let traces = [];
+                Object.keys(labelColors).forEach(label => {
+                    let xSeg = [], ySeg = [];
+                    for (let i = 0; i < data.x.length; i++) {
+                        if (data.labels[i] === label) {
+                            xSeg.push(data.x[i]);
+                            ySeg.push(data.y[i]);
+                        } else {
+                            xSeg.push(null);
+                            ySeg.push(null);
+                        }
+                    }
+                    traces.push({
+                        x: xSeg, y: ySeg, type: 'scatter', mode: 'lines', name: label,
+                        line: { color: labelColors[label], width: 2.5 }
+                    });
+                });
+                Plotly.newPlot('plot', traces, {
+                    title: { text: 'Real-time Waveform', font: { color: '#ffffff' } },
+                    margin: { t: 40, b: 40, l: 40, r: 20 },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0.2)',
+                    font: { color: '#ffffff' },
+                    yaxis: { range: [-1.5, 1.5], autorange: false, gridcolor: 'rgba(255,255,255,0.1)' },
+                    xaxis: { gridcolor: 'rgba(255,255,255,0.1)' },
+                    legend: { orientation: 'h', y: 1.1, x: 0.5, xanchor: 'center' }
+                });
+
+                const endIndex = data.current_end_index;
+                const faultLabels = ['sag', 'swell', 'spike'];
+                const hasFault = data.labels.some(label => faultLabels.includes(label));
+                if (hasFault && endIndex > lastFaultIndex + 100) {
+                    console.log(`New fault detected near index ${endIndex}. Updating cost graph.`);
+                    lastFaultIndex = endIndex;
+                    drawExtraCostGraph(endIndex);
+                }
+            });
+    }
+
+    function drawExtraCostGraph(endIndex = 1100) {
+        fetch(`/extra_cost_data?end_index=${endIndex}`)
+            .then(response => response.json())
+            .then(response => {
+                const totalCostElement = document.getElementById('total-cost-display');
+                const messageElement = document.getElementById('cost-analysis-message');
+                if (response.data) {
+                    const data = response.data;
+                    const traceActual = { x: data.x_axis, y: data.actual_cost, mode: 'lines', name: 'Actual Cost', line: { color: '#4dd0e1' } };
+                    const tracePredicted = { x: data.x_axis, y: data.predicted_cost, mode: 'lines', name: 'Predicted (No Fault)', line: { color: '#26de81', dash: 'dot' } };
+                    const traceExtra = { x: data.x_axis, y: data.extra_cost, type: 'scatter', fill: 'tozeroy', name: 'Additional Cost', line: { color: '#ff4d4d' } };
+                    const layout = {
+                        title: { text: 'Cost Analysis of Fault Event', font: { color: '#ffffff' } },
+                        xaxis: { title: 'Sample Index', gridcolor: 'rgba(255,255,255,0.1)' },
+                        yaxis: { title: 'Cost (₹)', gridcolor: 'rgba(255,255,255,0.1)' },
+                        margin: { t: 40, b: 50, l: 50, r: 20 },
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0.2)',
+                        font: { color: '#ffffff' },
+                        legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center' }
+                    };
+                    Plotly.newPlot('extra-cost-plot', [traceActual, tracePredicted, traceExtra], layout);
+                    totalCostElement.innerHTML = `Total Additional Cost: <span style="color: var(--danger-color);">₹ ${data.total_extra_cost.toFixed(2)}</span>`;
+                    messageElement.textContent = `Analysis for event ending near sample ${endIndex}.`;
+                } else {
+                    totalCostElement.textContent = "N/A";
+                    messageElement.textContent = response.message;
+                }
+            })
+            .catch(err => console.error("Error loading extra cost data:", err));
+    }
+
+const chatBox = document.getElementById("chat-box");
+const input = document.getElementById("user-input");
+const sendButton = document.getElementById("send-button");
+let chatHistory = [];   // ✅ FIXED
+
+function appendMessage(sender, message, isHtml = false) {
+    const div = document.createElement("div");
+    div.className = `chat-message ${sender === 'user' ? 'user-message' : 'agent-message'}`;
+    if (isHtml) {
+        div.innerHTML = message;
+    } else {
+        div.textContent = message;
+    }
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
+}
+
+function sendMessage() {
+    const message = input.value.trim();
+    if (message === "") return;
+
+    appendMessage('user', message);
+    input.value = "";
+
+    const thinkingMessage = appendMessage(
+        'agent',
+        '<i class="fa-solid fa-spinner fa-spin"></i> Thinking...',
+        true
+    );
+
+    fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message: message,
+            history: chatHistory   // ✅ array
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        thinkingMessage.innerHTML = data.response;
+        chatHistory = Array.isArray(data.history) ? data.history : [];  // ✅ guard
+    })
+    .catch(err => {
+        thinkingMessage.innerHTML = "Sorry, an error occurred.";
+        console.error(err);
+    });
+}
+    sendButton.addEventListener("click", sendMessage);
+    input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+
+    function loadReports() {
+        fetch('/reports').then(res => res.json()).then(files => {
+            const list = document.getElementById('report-list');
+            const iframe = document.getElementById('pdf-viewer');
+            iframe.style.display = 'none';
+            list.innerHTML = '';
+            files.forEach(file => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerText = file;
+                item.onclick = (e) => { e.preventDefault(); iframe.src = `/reports/${file}`; iframe.style.display = 'block'; };
+                list.appendChild(item);
+            });
+        });
+    }
+
+    function loadFaults() {
+        fetch('/faults').then(res => res.json()).then(files => {
+            const list = document.getElementById('fault-list');
+            const iframe = document.getElementById('fault-viewer');
+            iframe.style.display = 'none';
+            list.innerHTML = '';
+            files.forEach(file => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerText = file;
+                item.onclick = (e) => { e.preventDefault(); iframe.src = `/faults/${file}`; iframe.style.display = 'block'; };
+                list.appendChild(item);
+            });
+        });
+    }
+
+    function loadRecommendations() {
+        fetch('/list_recommendations').then(res => res.json()).then(data => {
+            const list = document.getElementById('ai-recommendation-list');
+            list.innerHTML = '';
+            data.forEach(item => {
+                const li = document.createElement('a');
+                li.href = '#';
+                li.className = 'list-group-item list-group-item-action';
+                li.innerHTML = `<i class="fa-solid fa-bolt"></i> ${item.type} <small class="float-end">${item.time}</small>`;
+                li.onclick = (e) => {
+                    e.preventDefault();
+                    fetch('/recommendations/' + encodeURIComponent(item.filename)).then(res => res.json()).then(fileData => {
+                        const viewer = document.getElementById('recommendation-viewer');
+                        viewer.style.display = 'block';
+                        if (fileData.content) {
+                            viewer.innerHTML = marked.parse(fileData.content.replace(/'''md\s*/i, '').replace(/'''$/, '').trim());
+                        } else {
+                            viewer.innerHTML = `<p class="text-danger">Error: ${fileData.error}</p>`;
+                        }
+                    }).catch(err => console.error("Error loading recommendation:", err));
+                };
+                list.appendChild(li);
+            });
+        }).catch(err => console.error(err));
+    }
+
+    function generateNewRecommendation() {
+        fetch('/generate_recommendation', { method: 'POST' }).then(res => res.json()).then(data => {
+            alert(data.message || "Recommendation generation triggered!");
+            loadRecommendations();
+        }).catch(err => {
+            console.error("Error generating recommendation:", err);
+            alert("Error generating recommendation. Check console for details.");
+        });
+    }
+    function loadDamageCost() {
+    fetch('/extra_cost_data')
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.assets || data.assets.length === 0) {
+                document.getElementById("damage-total").innerHTML =
+                    "Total Damage Cost: <span style='color:#ff4d4d'>No Data</span>";
+                return;
+            }
+
+            const tbody = document.querySelector("#damage-table tbody");
+            tbody.innerHTML = "";
+
+            let totalDamage = 0;
+
+            data.assets.forEach(asset => {
+                const tr = document.createElement("tr");
+
+                const damageCost = asset.damage_cost || 0;
+                totalDamage += damageCost;
+
+                tr.innerHTML = `
+                    <td>${asset.name}</td>
+                    <td>${asset.sensitivity}</td>
+                    <td>${asset.replacement_cost}</td>
+                    <td>${asset.damage_probability}</td>
+                    <td style="color:#ff6b6b">${damageCost.toFixed(2)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("damage-total").innerHTML =
+                `Total Damage Cost: <span style="color:#ff4d4d">₹ ${totalDamage.toFixed(2)}</span>`;
+        })
+        .catch(err => {
+            console.error("Error loading damage cost:", err);
+            document.getElementById("damage-total").innerHTML =
+                "<span style='color:red'>Error loading data</span>";
+        });
+    }
+
+    // Initial calls
+    setInterval(updateWaveform, 1000);
+    updateWaveform();
+    drawExtraCostGraph();
+    loadRecommendations();
+    </script>
+</body>
+</html>

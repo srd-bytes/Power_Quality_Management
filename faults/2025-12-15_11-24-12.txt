@@ -1,0 +1,7 @@
+{
+    "time": "2025-12-15_11-24-12",
+    "type": "Voltage sag",
+    "location": "BUS 11",
+    "status": "ongoing",
+    "duration_ms": 20
+}

@@ -1,0 +1,57 @@
+ # Power Quality Disturbance Analysis Report
+
+    ---
+
+    ## Event Metadata
+
+    | Parameter               | Value                                   |
+    |------------------------|-----------------------------------------|
+    | Location               | Main LT Panel (Incoming Feeder)         |
+    | Sampling Frequency     | 10 kHz                                  |
+    | Nominal Voltage        | 230 V                                   |
+    | Event Type             | Voltage Sag                             |
+    | Event Time             | 2025-06-21 14:27:45                     |
+    | Event Duration         | 140 ms                                  |
+    | Amplitude Drop         | 230 V → 135 V                           |
+    | Recovery Time          | 160 ms                                  |
+
+    ---
+
+    ## Summary
+
+    At 14:27:45 on June 21, 2025, a voltage sag was detected on the Main LT Panel (Incoming Feeder). The voltage dropped from 230 V to 135 V, lasting for 140 milliseconds, and recovered within 160 milliseconds.
+
+    ---
+
+    ## Technical Analysis
+
+    - **Sag Severity**: Moderate  
+    - **Voltage Deviation**: Approximately 41.3% drop  
+    - **Likely Causes**:  
+    - Motor startup  
+    - Downstream short circuit  
+    - **System Impact**:  
+    - Possible malfunction or reset of sensitive equipment such as PLCs, drives, and computers  
+    - **Standards Compliance**:  
+    - The event is within IEEE Std 1159 recommended limits for sag duration.
+
+    ---
+
+    ## Recommendations
+
+    ### Immediate Actions
+
+    - Monitor the feeder for recurrence.
+    - Investigate any sudden load changes or short circuits.
+
+    ### Preventive Measures
+
+    - Consider installing a Dynamic Voltage Restorer (DVR) or a voltage stabilizer.
+    - Evaluate the presence of large inductive loads.
+    - Ensure critical systems are connected through a reliable UPS.
+
+    ---
+
+    ## AI Remarks
+
+    The disturbance was moderate and transient. While it is not expected to cause immediate critical failures, continued monitoring is advised to ensure power system stability and avoid potential equipment stress or downtime.
