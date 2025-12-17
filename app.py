@@ -115,6 +115,11 @@ def logger_process(shmA_name, shmB_name, ready_A, ready_B):
 def sliding_rms(x, window=5):
     return np.sqrt(np.convolve(x**2, np.ones(window)/window, mode='valid'))
 
+SAG_ENTER = 0.9
+SAG_EXIT  = 0.95
+SWELL_ENTER = 1.1
+SWELL_EXIT  = 1.05
+
 # ================= EVENT DETECTION =================
 def detect_event(buf, sag_thr=0.9, swell_thr=1.1):
     """Simple threshold-based sag/swell detector on Phase A."""
@@ -125,12 +130,25 @@ def detect_event(buf, sag_thr=0.9, swell_thr=1.1):
     vrms_series = sliding_rms(y)
     vrms = np.mean(vrms_series)
 
-    if vrms < sag_thr:
-        return x.tolist(), y.tolist(), "sag"
-    elif vrms > swell_thr:
-        return x.tolist(), y.tolist(), "swell"
+    global event_active, event_type
+
+    # -------- EVENT ENTRY --------
+    if not event_active:
+        if vrms < SAG_ENTER:
+            return x.tolist(), y.tolist(), "sag"
+        elif vrms > SWELL_ENTER:
+            return x.tolist(), y.tolist(), "swell"
+        else:
+            return x.tolist(), y.tolist(), "normal"
+
+    # -------- EVENT EXIT --------
     else:
-        return x.tolist(), y.tolist(), "normal"
+        if event_type == "sag" and vrms > SAG_EXIT:
+            return x.tolist(), y.tolist(), "normal"
+        elif event_type == "swell" and vrms < SWELL_EXIT:
+            return x.tolist(), y.tolist(), "normal"
+        else:
+            return x.tolist(), y.tolist(), event_type
 
 def _write_event_file(filename, start_time, event_type, bus, status, duration=None):
     """Write event status to a JSON text file to be consumed by the frontend."""
@@ -185,12 +203,18 @@ def bridge_thread(shmA_name, shmB_name, ready_A, ready_B):
                 event_start_time = time.strftime("%Y-%m-%d_%H-%M-%S")
                 event_type = label
                 event_start_sample_index = x[0]
-                print(f"[FAULT] {label.upper()} started at {event_start_time}")
-                
-                # Write to filesystem for frontend
-                _write_event_file(f"{event_start_time}.txt", event_start_time, label, event_start_bus, "ongoing")
 
-            # Push ongoing update to DB Queue
+                print(f"[FAULT] {label.upper()} started at {event_start_time}")
+
+                _write_event_file(
+                    f"{event_start_time}.txt",
+                    event_start_time,
+                    label,
+                    event_start_bus,
+                    "ongoing"
+                )
+
+            # ongoing DB update
             db_queue.put(("ongoing", {
                 "time": event_start_time,
                 "type": event_type,
@@ -198,22 +222,32 @@ def bridge_thread(shmA_name, shmB_name, ready_A, ready_B):
                 "duration_ms": "ongoing",
             }))
 
-        else:
-            if event_active:
-                duration = int(x[-1] - event_start_sample_index)
-                print(f"[FAULT] {event_type.upper()} ended. Duration: {duration}")
-                
-                # Update filesystem file to 'final'
-                _write_event_file(f"{event_start_time}.txt", event_start_time, event_type, event_start_bus, "final", duration)
 
-                # Push completion to DB Queue
-                db_queue.put(("done", {
-                    "time": event_start_time,
-                    "type": event_type,
-                    "location": f"BUS {event_start_bus}",
-                    "duration_ms": duration,
-                }))
-                event_active = False
+        # -------- FINALIZE EVENT --------
+        if event_active and label == "normal":
+            duration = int(x[-1] - event_start_sample_index)
+
+            print(f"[FAULT] {event_type.upper()} ended. Duration: {duration}")
+
+            _write_event_file(
+                f"{event_start_time}.txt",
+                event_start_time,
+                event_type,
+                event_start_bus,
+                "final",
+                duration
+            )
+
+            db_queue.put(("done", {
+                "time": event_start_time,
+                "type": event_type,
+                "location": f"BUS {event_start_bus}",
+                "duration_ms": duration,
+            }))
+
+            event_active = False
+            event_type = None
+
 
         flag.clear()
         batch += 1
@@ -380,6 +414,16 @@ ASSET_DB = {
             "sensitivity": 0.85
         }
     ],
+    "BUS 8": [
+        {
+            "name": "Capacitor Cell",
+            "type": "capacitor",
+            "rating_kw": 10,
+            "asset_cost_rs": 1200000,
+            "process_cost_rs_per_min": 15000/(60000),       #its in per ms
+            "sensitivity": 0.85
+        }
+    ],
 
     "BUS 7": [
         {
@@ -409,7 +453,7 @@ def extra_cost_data():
     with open(os.path.join(FAULT_FOLDER, latest), "r") as f:
         fault = json.load(f)
 
-    bus = fault.get("location", "BUS 11")
+    bus = fault.get("location", "BUS 8")
     event_type = fault.get("type", "Voltage sag").replace("Voltage ", "")
     raw_duration = fault.get("duration_ms", 100)
 
