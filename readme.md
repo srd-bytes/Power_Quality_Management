@@ -186,5 +186,6 @@ curl -X POST http://localhost:5000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "Explain the last sag event", "history": []}'
 ```
-
+## LINKS
+1. [Video](https://1drv.ms/v/c/d1f451237b9c5c5f/IQDPTvP2VXgRTrr3FNvCoMwaAUqHkwi5EfEqfSALNbf5x2Q?e=USL9Lo)
 This README should give you everything needed to **set up, run, and extend** the Power Quality Management system.
