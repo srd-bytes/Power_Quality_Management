@@ -50,7 +50,7 @@ import pandas as pd
 UDP_IP = "127.0.0.1"
 UDP_PORT = 25000
 
-SAMPLE_COUNT = 20
+SAMPLE_COUNT = 40
 FEATURE_COUNT = 85  # sample_idx + 84 float values (14 buses × 6 values)
 SHAPE = (SAMPLE_COUNT, FEATURE_COUNT)
 

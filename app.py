@@ -42,7 +42,7 @@ RECOMMENDATION_DIR = "ai_recommendations"
 event_active = False
 event_start_time = None
 event_type = None
-event_start_bus = 11  # Defaulting to Bus 11
+event_start_bus = 8  # Defaulting to Bus 8 ( we are monitoring bus 8 phase A)
 event_start_sample_index = None
 
 latest_data_chunk = {  # Last batch of data exposed to `/waveform_data`
@@ -124,7 +124,7 @@ SWELL_EXIT  = 1.05
 def detect_event(buf, sag_thr=0.9, swell_thr=1.1):
     """Simple threshold-based sag/swell detector on Phase A."""
     x = buf[:, 0]
-    y = buf[:, 45]  # Monitoring bus 8 phase C
+    y = buf[:, event_start_bus*6-5]  # Monitoring bus 8 phase A
 
     # RMS over the batch (window)
     vrms_series = sliding_rms(y)
